@@ -32,6 +32,9 @@ related one to another in order to manager against traffic.
 
 ### Signal Propeties
 
+- Handle against traffic, has a default status when not "triggered"
+- Should we link two signals if against traffic?
+
 - Position: trackId, pk
 - Regime: manual, automaic
 - Type: BAL, BAPR, TVM...
