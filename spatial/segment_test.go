@@ -27,7 +27,7 @@ func TestSameSection(t *testing.T) {
 	}
 
 	endFail := NewPosition(1, 0)
-	if _, err := NewSegment(start, endFail); err != nil {
+	if _, err := NewSegment(start, endFail); err == nil {
 		t.Errorf("extremitites are not on the same SectionID, expected to fail")
 	}
 }

@@ -61,7 +61,7 @@ func (s Segment) Direction() Direction {
 
 func (s Segment) In(pos Position) bool {
 	if s.startPos.EqualSection(pos) && s.endPos.EqualSection(pos) {
-		return s.startPos.PK() >= pos.PK() && pos.PK() <= s.endPos.PK()
+		return s.startPos.PK() <= pos.PK() && pos.PK() <= s.endPos.PK()
 	}
 	return false
 }
