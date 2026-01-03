@@ -110,3 +110,47 @@ func TestIn(t *testing.T) {
 		t.Errorf("position OUT segment, found IN")
 	}
 }
+
+func TestOverlaps(t *testing.T) {
+	segment, err := NewSegment(NewPosition(0, 5), NewPosition(0, 10))
+	if err != nil {
+		t.Errorf("must not fail to create segment: %s", err.Error())
+	}
+
+	segmentOverlapsRight, err := NewSegment(NewPosition(0, 10), NewPosition(0, 20))
+	if err != nil {
+		t.Errorf("must not fail to create segment: %s", err.Error())
+	}
+
+	if !segment.Overlaps(segmentOverlapsRight) {
+		t.Errorf("segments overlap, found they do not")
+	}
+
+	segmentOverlapsLeft, err := NewSegment(NewPosition(0, 0), NewPosition(0, 5))
+	if err != nil {
+		t.Errorf("must not fail to create segment: %s", err.Error())
+	}
+
+	if !segment.Overlaps(segmentOverlapsLeft) {
+		t.Errorf("segments overlap, found they do not")
+	}
+
+	segmentOverlapsCenter, err := NewSegment(NewPosition(0, 7), NewPosition(0, 8))
+	if err != nil {
+		t.Errorf("must not fail to create segment: %s", err.Error())
+	}
+
+	if !segment.Overlaps(segmentOverlapsCenter) {
+		t.Errorf("segments overlap, found they do not")
+	}
+
+	segmentOverlapsLarger, err := NewSegment(NewPosition(0, 0), NewPosition(0, 20))
+	if err != nil {
+		t.Errorf("must not fail to create segment: %s", err.Error())
+	}
+
+	if !segment.Overlaps(segmentOverlapsLarger) {
+		t.Errorf("segments overlap, found they do not")
+	}
+
+}
