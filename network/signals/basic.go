@@ -15,33 +15,40 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package signals
 
-type Status int64
-
-const (
-	Offset      Status = 100
-	BasicOffset Status = 0
+import (
+	"github.com/NoelM/therailnetwork/spatial"
 )
 
-type Trigger int64
-
 const (
-	Manual Trigger = iota
-	Automatic
+	BasicRed Status = BasicOffset + iota
+	BasicGreen
 )
 
-type Signal interface {
-	ID() int64
-
-	Trigger() Trigger
-	Status() Status
-
-	Open()
-	OpenWithParent(parent Signal)
-	Close()
-
-	Parents() []int64
-	AddParent(id int64)
-	RemoveParent(id int64)
-
-	Detector() int64
+type Basic struct {
+	id        int64
+	trigger   Trigger
+	position  spatial.Position
+	status    Status
+	parents   map[int64]bool
+	detectors map[int64]bool
 }
+
+func NewBasic(id int64, trigger Trigger, pos spatial.Position) *Basic {
+	return &Basic{
+		id:        id,
+		trigger:   trigger,
+		position:  pos,
+		parents:   make(map[int64]bool),
+		detectors: make(map[int64]bool),
+	}
+}
+
+func (b Basic) ID() int64 {
+	return b.id
+}
+
+func (b Basic) Trigger() Trigger {
+	return b.trigger
+}
+
+func (b Basic) Status() Status
