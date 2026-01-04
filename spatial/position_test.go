@@ -19,15 +19,30 @@ import (
 	"testing"
 )
 
-func TestEqualSection(t *testing.T) {
-	reference := NewPosition(0, 1)
-	sameSection := NewPosition(0, 2)
-	if !reference.EqualSection(sameSection) {
+func TestPositionSameSection(t *testing.T) {
+	reference := NewPosition(0, 1*Meter)
+
+	sameSection := NewPosition(0, 2*Meter)
+	if !reference.SameSection(sameSection) {
 		t.Errorf("reference & sameSection positions are on the same SectionID")
 	}
 
-	diffSection := NewPosition(1, 1)
-	if reference.EqualSection(diffSection) {
+	diffSection := NewPosition(1, 1*Meter)
+	if reference.SameSection(diffSection) {
 		t.Errorf("reference & diffSection positions are not on the same SectionID")
+	}
+}
+
+func TestPositionDistance(t *testing.T) {
+	reference := NewPosition(0, 1*Meter)
+
+	ascPos := NewPosition(0, 2*Meter)
+	if dist, err := reference.Distance(ascPos); dist != 1*Meter || err != nil {
+		t.Errorf("distance must be 1, got %d, error must be nil, got %s", dist.Millimeter(), err)
+	}
+
+	dscPos := NewPosition(0, 0)
+	if dist, err := reference.Distance(dscPos); dist != 1*Meter || err != nil {
+		t.Errorf("distance must be 1, got %d, error must be nil, got %s", dist.Millimeter(), err)
 	}
 }

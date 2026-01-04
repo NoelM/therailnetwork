@@ -40,7 +40,7 @@ func (i Interval) Steps() int {
 	return len(i.segments)
 }
 
-func (i Interval) Len() (length int) {
+func (i Interval) Len() (length Distance) {
 	for _, s := range i.segments {
 		length += s.Len()
 	}
@@ -58,7 +58,7 @@ func (i Interval) In(pos Position) bool {
 
 func (s *Interval) Overlaps(seg Segment) bool {
 	for _, s := range s.segments {
-		if s.Overlaps(seg) {
+		if s.Overlap(seg) {
 			return true
 		}
 	}

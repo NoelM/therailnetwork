@@ -15,40 +15,43 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package spatial
 
-import (
-	"fmt"
+type Distance int64
+
+const (
+	Millimeter Distance = 1
+	Meter      Distance = 1000 * Millimeter
+	Kilometer  Distance = 1000 * Meter
 )
 
-// Position designates a point which belongs
-// to a track section at a given kilometer point (PK)
-type Position struct {
-	sectionID int
-	pk        Distance
+func (d Distance) Millimeter() int64 {
+	return int64(d)
 }
 
-func NewPosition(secID int, pk Distance) Position {
-	return Position{
-		sectionID: secID,
-		pk:        pk,
+func (d Distance) Meter() int64 {
+	return int64(d) / 1e3
+}
+
+func (d Distance) Kilometer() int64 {
+	return int64(d) / 1e6
+}
+
+func abs(d Distance) Distance {
+	if int64(d) < 0 {
+		return -d
 	}
+	return d
 }
 
-func (p Position) SectionID() int {
-	return p.sectionID
-}
-
-func (p Position) PK() Distance {
-	return p.pk
-}
-
-func (p Position) SameSection(pos Position) bool {
-	return p.sectionID == pos.sectionID
-}
-
-func (p Position) Distance(pos Position) (Distance, error) {
-	if !p.SameSection(pos) {
-		return 0.0, fmt.Errorf("unable to compute distance, Positions not on the same SectionID")
+func min(d1, d2 Distance) Distance {
+	if d1 < d2 {
+		return d1
 	}
+	return d2
+}
 
-	return abs(p.pk - pos.pk), nil
+func max(d1, d2 Distance) Distance {
+	if d1 > d2 {
+		return d1
+	}
+	return d2
 }

@@ -22,17 +22,38 @@ import (
 type Segment struct {
 	startPos Position
 	endPos   Position
+	dir      Direction
 }
 
 func NewSegment(startPos, endPos Position) (Segment, error) {
 	if startPos.SectionID() != endPos.SectionID() {
-		return Segment{}, fmt.Errorf("cannot create segment, SectionIDs mismatch between start & end positions")
+		return Segment{}, fmt.Errorf("cannot create segment: SectionIDs mismatch between start & end positions")
+	}
+
+	if startPos.pk == endPos.pk {
+		return Segment{}, fmt.Errorf("cannot create segment: lenght between two position must be non-zero")
+	}
+
+	var dir Direction
+	if endPos.pk > startPos.pk {
+		dir = Ascending
+	} else {
+		dir = Descending
 	}
 
 	return Segment{
 		startPos: startPos,
 		endPos:   endPos,
+		dir:      dir,
 	}, nil
+}
+
+func (s Segment) ascendingPKs() (Distance, Distance) {
+	var start, end = s.startPos.pk, s.endPos.pk
+	if s.dir == Descending {
+		start, end = end, start
+	}
+	return start, end
 }
 
 func (s Segment) Start() Position {
@@ -43,29 +64,103 @@ func (s Segment) End() Position {
 	return s.endPos
 }
 
-func (s Segment) Len() int {
-	if s.startPos.PK() < s.endPos.PK() {
-		return s.endPos.PK() - s.startPos.PK()
-	} else {
-		return s.startPos.PK() - s.endPos.PK()
-	}
+func (s Segment) Len() Distance {
+	return abs(s.startPos.pk - s.endPos.pk)
 }
 
 func (s Segment) Direction() Direction {
-	if s.startPos.PK() < s.endPos.PK() {
-		return Ascending
+	return s.dir
+}
+
+func (s *Segment) Reverse() *Segment {
+	if s.dir == Ascending {
+		s.dir = Descending
 	} else {
-		return Descending
+		s.dir = Ascending
 	}
+
+	s.startPos, s.endPos = s.endPos, s.startPos
+	return s
+}
+
+func (s Segment) SameSection(seg Segment) bool {
+	return s.startPos.SameSection(seg.startPos)
 }
 
 func (s Segment) In(pos Position) bool {
-	if s.startPos.EqualSection(pos) && s.endPos.EqualSection(pos) {
-		return s.startPos.PK() <= pos.PK() && pos.PK() <= s.endPos.PK()
+	if !s.startPos.SameSection(pos) {
+		return false
 	}
-	return false
+
+	start, end := s.ascendingPKs()
+	return start <= pos.pk && pos.pk <= end
 }
 
-func (s Segment) Overlaps(seg Segment) bool {
-	return seg.In(s.startPos) || seg.In(s.endPos)
+func (s Segment) Overlap(seg Segment) bool {
+	if !s.SameSection(seg) {
+		return false
+	}
+
+	start, end := s.ascendingPKs()
+	compareStart, compareEnd := seg.ascendingPKs()
+
+	// Overlap conditions:
+	//
+	//    current:         |------|
+	//    compared: |--------|
+	//    start <= comparedEnd && end >= comparedEnd
+	//
+	// === OR ===
+	//
+	//    current:  |-----|
+	//    compared:     |------|
+	//    start <= comparedStart && end >= comparedStart
+	//
+	// === OR ===
+	//
+	//    current:   |-----|
+	//    compared:    |-|
+	//    start <= comparedStart && end >= comparedEnd
+	//
+	// === OR ===
+	//
+	//    current:     |-|
+	//    compared:  |-----|
+	//    start >= comparedStart && end <= comparedEnd
+	//
+
+	return ((start <= compareEnd && end >= compareEnd) ||
+		(start <= compareStart && end >= compareStart) ||
+		(start <= compareStart && end >= compareEnd) ||
+		(start >= compareStart && end <= compareEnd))
+}
+
+func (s Segment) Intersect(seg Segment) (Segment, error) {
+	if !s.Overlap(seg) {
+		return Segment{}, fmt.Errorf("cannot compute intersect: segments do not overlap")
+	}
+
+	start, end := s.ascendingPKs()
+	compareStart, compareEnd := s.ascendingPKs()
+
+	intersectStart := max(start, compareStart)
+	intersectEnd := min(end, compareEnd)
+
+	sectionID := s.startPos.sectionID
+	return NewSegment(NewPosition(sectionID, intersectStart), NewPosition(sectionID, intersectEnd))
+}
+
+func (s Segment) Union(seg Segment) (Segment, error) {
+	if !s.Overlap(seg) {
+		return Segment{}, fmt.Errorf("cannot compute union: segments do not overlap")
+	}
+
+	start, end := s.ascendingPKs()
+	compareStart, compareEnd := s.ascendingPKs()
+
+	unionStart := min(start, compareStart)
+	unionEnd := max(end, compareEnd)
+
+	sectionID := s.startPos.sectionID
+	return NewSegment(NewPosition(sectionID, unionStart), NewPosition(sectionID, unionEnd))
 }
