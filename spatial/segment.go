@@ -141,7 +141,7 @@ func (s Segment) Intersect(seg Segment) (Segment, error) {
 	}
 
 	start, end := s.ascendingPKs()
-	compareStart, compareEnd := s.ascendingPKs()
+	compareStart, compareEnd := seg.ascendingPKs()
 
 	intersectStart := max(start, compareStart)
 	intersectEnd := min(end, compareEnd)
@@ -156,7 +156,7 @@ func (s Segment) Union(seg Segment) (Segment, error) {
 	}
 
 	start, end := s.ascendingPKs()
-	compareStart, compareEnd := s.ascendingPKs()
+	compareStart, compareEnd := seg.ascendingPKs()
 
 	unionStart := min(start, compareStart)
 	unionEnd := max(end, compareEnd)

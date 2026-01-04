@@ -129,3 +129,117 @@ func TestOverlap(t *testing.T) {
 		t.Errorf("segments do not overlap, found they do")
 	}
 }
+
+func TestIntersect(t *testing.T) {
+	var inter Segment
+	var err error
+
+	segment := createSegment(t, NewPosition(0, 5), NewPosition(0, 10))
+
+	segmentOverlapPointRight := createSegment(t, NewPosition(0, 10), NewPosition(0, 20))
+	if inter, err = segment.Intersect(segmentOverlapPointRight); err == nil {
+		t.Errorf("intersect on a point, invalid segment")
+	}
+
+	segmentOverlapRight := createSegment(t, NewPosition(0, 9), NewPosition(0, 20))
+	if inter, err = segment.Intersect(segmentOverlapRight); err != nil {
+		t.Errorf("segments intersect, found they do not")
+	}
+	if inter.Start().PK() != 9 || inter.End().PK() != 10 {
+		t.Errorf("segments intersect, between [9;10], found [%d:%d]", inter.Start().PK(), inter.End().PK())
+	}
+
+	segmentOverlapPointLeft := createSegment(t, NewPosition(0, 0), NewPosition(0, 5))
+	if inter, err = segment.Intersect(segmentOverlapPointLeft); err == nil {
+		t.Errorf("intersect on a point, invalid segment")
+	}
+
+	segmentOverlapLeft := createSegment(t, NewPosition(0, 0), NewPosition(0, 6))
+	if inter, err = segment.Intersect(segmentOverlapLeft); err != nil {
+		t.Errorf("segments intersect, found they do not")
+	}
+	if inter.Start().PK() != 5 || inter.End().PK() != 6 {
+		t.Errorf("segments intersect, between [5;6], found [%d:%d]", inter.Start().PK(), inter.End().PK())
+	}
+
+	segmentOverlapCenter := createSegment(t, NewPosition(0, 7), NewPosition(0, 8))
+	if inter, err = segment.Intersect(segmentOverlapCenter); err != nil {
+		t.Errorf("segments intersect, found they do not")
+	}
+	if inter.Start().PK() != 7 || inter.End().PK() != 8 {
+		t.Errorf("segments intersect, between [7;8], found [%d:%d]", inter.Start().PK(), inter.End().PK())
+	}
+
+	segmentOverlapLarger := createSegment(t, NewPosition(0, 0), NewPosition(0, 20))
+	if inter, err = segment.Intersect(segmentOverlapLarger); err != nil {
+		t.Errorf("segments intersect, found they do not")
+	}
+	if inter.Start().PK() != 5 || inter.End().PK() != 10 {
+		t.Errorf("segments intersect, between [5;10], found [%d:%d]", inter.Start().PK(), inter.End().PK())
+	}
+
+	segmentOutOfRange := createSegment(t, NewPosition(0, 100), NewPosition(0, 200))
+	if inter, err = segment.Intersect(segmentOutOfRange); err == nil {
+		t.Errorf("intersect on a point, invalid segment")
+	}
+}
+
+func TestUnion(t *testing.T) {
+	var union Segment
+	var err error
+
+	segment := createSegment(t, NewPosition(0, 5), NewPosition(0, 10))
+
+	segmentOverlapPointRight := createSegment(t, NewPosition(0, 10), NewPosition(0, 20))
+	if union, err = segment.Union(segmentOverlapPointRight); err != nil {
+		t.Errorf("segments union, found they do not")
+	}
+	if union.Start().PK() != 5 || union.End().PK() != 20 {
+		t.Errorf("segments union, between [5;20], found [%d:%d]", union.Start().PK(), union.End().PK())
+	}
+
+	segmentOverlapRight := createSegment(t, NewPosition(0, 9), NewPosition(0, 20))
+	if union, err = segment.Union(segmentOverlapRight); err != nil {
+		t.Errorf("segments union, found they do not")
+	}
+	if union.Start().PK() != 5 || union.End().PK() != 20 {
+		t.Errorf("segments union, between [5;20], found [%d:%d]", union.Start().PK(), union.End().PK())
+	}
+
+	segmentOverlapPointLeft := createSegment(t, NewPosition(0, 0), NewPosition(0, 5))
+	if union, err = segment.Union(segmentOverlapPointLeft); err != nil {
+		t.Errorf("segments union, found they do not")
+	}
+	if union.Start().PK() != 0 || union.End().PK() != 10 {
+		t.Errorf("segments union, between [0;10], found [%d:%d]", union.Start().PK(), union.End().PK())
+	}
+
+	segmentOverlapLeft := createSegment(t, NewPosition(0, 0), NewPosition(0, 6))
+	if union, err = segment.Union(segmentOverlapLeft); err != nil {
+		t.Errorf("segments union, found they do not")
+	}
+	if union.Start().PK() != 0 || union.End().PK() != 10 {
+		t.Errorf("segments union, between [0;10], found [%d:%d]", union.Start().PK(), union.End().PK())
+	}
+
+	segmentOverlapCenter := createSegment(t, NewPosition(0, 7), NewPosition(0, 8))
+	if union, err = segment.Union(segmentOverlapCenter); err != nil {
+		t.Errorf("segments union, found they do not")
+	}
+	if union.Start().PK() != 5 || union.End().PK() != 10 {
+		t.Errorf("segments union, between [5;10], found [%d:%d]", union.Start().PK(), union.End().PK())
+	}
+
+	segmentOverlapLarger := createSegment(t, NewPosition(0, 0), NewPosition(0, 20))
+	if union, err = segment.Union(segmentOverlapLarger); err != nil {
+		t.Errorf("segments union, found they do not")
+	}
+	if union.Start().PK() != 0 || union.End().PK() != 20 {
+		t.Errorf("segments union, between [0;20], found [%d:%d]", union.Start().PK(), union.End().PK())
+	}
+
+	segmentOutOfRange := createSegment(t, NewPosition(0, 100), NewPosition(0, 200))
+	if union, err = segment.Union(segmentOutOfRange); err == nil {
+		t.Errorf("union on a point, invalid segment")
+	}
+}
