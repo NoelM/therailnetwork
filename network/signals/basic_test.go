@@ -16,31 +16,31 @@
 package signals
 
 import (
+	"testing"
+
 	"github.com/NoelM/therailnetwork/network"
+	"github.com/NoelM/therailnetwork/spatial"
 )
 
-type Status int64
+func TestBasicReserve(t *testing.T) {
+	basic := NewBasic(0, spatial.NewPosition(0, 0), Manual)
 
-const (
-	Offset      Status = 100
-	BasicOffset Status = 0
-)
+	token := basic.Reserve()
+	if token == nil {
+		t.Errorf("unable to reserve empty Basic")
+	}
 
-type Trigger int64
+	nilToken := basic.Reserve()
+	if nilToken != nil {
+		t.Errorf("signal reserved twice")
+	}
 
-const (
-	Manual Trigger = iota
-	Automatic
-)
+	fakeToken, _ := network.NewPair()
+	if basic.Release(fakeToken) {
+		t.Errorf("fakeToken cannot release Basic signal")
+	}
 
-type Signal interface {
-	ID() int64
-
-	Trigger() Trigger
-	Status() Status
-
-	Reserve() *network.Token
-	Release(network.Token) bool
-	Open(network.Token) bool
-	Close(network.Token) bool
+	if !basic.Release(*token) {
+		t.Errorf("unable to release Basic")
+	}
 }

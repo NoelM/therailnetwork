@@ -16,6 +16,9 @@
 package signals
 
 import (
+	"sync"
+
+	"github.com/NoelM/therailnetwork/network"
 	"github.com/NoelM/therailnetwork/spatial"
 )
 
@@ -25,30 +28,88 @@ const (
 )
 
 type Basic struct {
-	id        int64
-	trigger   Trigger
-	position  spatial.Position
-	status    Status
-	parents   map[int64]bool
-	detectors map[int64]bool
+	id       int64
+	mtx      sync.RWMutex
+	position spatial.Position
+	trigger  Trigger
+	status   Status
+	digest   *network.Digest
 }
 
-func NewBasic(id int64, trigger Trigger, pos spatial.Position) *Basic {
+func NewBasic(id int64, pos spatial.Position, trigger Trigger) *Basic {
 	return &Basic{
-		id:        id,
-		trigger:   trigger,
-		position:  pos,
-		parents:   make(map[int64]bool),
-		detectors: make(map[int64]bool),
+		id:       id,
+		position: pos,
+		trigger:  trigger,
 	}
 }
 
-func (b Basic) ID() int64 {
+func (b *Basic) ID() int64 {
+	b.mtx.RLock()
+	defer b.mtx.RUnlock()
+
 	return b.id
 }
 
-func (b Basic) Trigger() Trigger {
+func (b *Basic) Trigger() Trigger {
+	b.mtx.RLock()
+	defer b.mtx.RUnlock()
+
 	return b.trigger
 }
 
-func (b Basic) Status() Status
+func (b *Basic) Status() Status {
+	b.mtx.RLock()
+	defer b.mtx.RUnlock()
+
+	return b.status
+}
+
+func (b *Basic) Reserve() *network.Token {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
+
+	if b.digest != nil {
+		return nil
+	}
+
+	token, digest := network.NewPair()
+	b.digest = &digest
+	return &token
+}
+
+func (b *Basic) Release(t network.Token) bool {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
+
+	if !b.digest.Match(t) {
+		return false
+	}
+
+	b.digest = nil
+	return true
+}
+
+func (b *Basic) Open(t network.Token) bool {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
+
+	if !b.digest.Match(t) {
+		return false
+	}
+
+	b.status = BasicGreen
+	return true
+}
+
+func (b *Basic) Close(t network.Token) bool {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
+
+	if !b.digest.Match(t) {
+		return false
+	}
+
+	b.status = BasicRed
+	return true
+}

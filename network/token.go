@@ -13,34 +13,24 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-package signals
+package network
 
 import (
-	"github.com/NoelM/therailnetwork/network"
+	"math/rand"
 )
 
-type Status int64
+type Token int64
+type Digest int64
 
-const (
-	Offset      Status = 100
-	BasicOffset Status = 0
-)
+func NewPair() (Token, Digest) {
+	t := Token(rand.Int63())
+	return t, derive(t)
+}
 
-type Trigger int64
+func derive(t Token) Digest {
+	return Digest(t % 99)
+}
 
-const (
-	Manual Trigger = iota
-	Automatic
-)
-
-type Signal interface {
-	ID() int64
-
-	Trigger() Trigger
-	Status() Status
-
-	Reserve() *network.Token
-	Release(network.Token) bool
-	Open(network.Token) bool
-	Close(network.Token) bool
+func (d Digest) Match(t Token) bool {
+	return d == derive(t)
 }
